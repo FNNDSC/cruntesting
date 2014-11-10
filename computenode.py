@@ -64,7 +64,7 @@ class childScheduler:
         self._numberOfChildren          = 1
 
         self._str_remotePath            = '~/chris/src/cruntesting'
-        self._str_remoteHost            = 'mit.eofe4.edu'
+        self._str_remoteHost            = 'eofe4'
         self._str_remoteUser            = 'rudolph'
         self._str_remoteCrun            = 'crun_hpc_slurm'
 
@@ -106,7 +106,7 @@ class childScheduler:
         The 'run' method actually does the work of this class.
         '''
 
-        str_endJobCodon = '; echo #child# > #child#-done.txt'
+        str_endJobCodon = '; echo #child# > %s/#child#-done.txt' % self._str_remotePath
 
         str_coreCmd     = self._l_cmd[0]
 
@@ -122,6 +122,8 @@ class childScheduler:
                                     )
             str_wholeCmd = '%s%s' % (self._l_cmd[0], str_cmdEnd)
             print('Child %d will execute: <%s>' % (c, str_wholeCmd))
+	    self.sshCluster.echo(True)
+	    self.sshCluster.echoStdOut(True)
             self.sshCluster(str_wholeCmd)
 
 
@@ -131,10 +133,11 @@ class childScheduler:
         while(True):
             self.OSshell('ls -1 *done* | wc -l')
             numberComplete = int(self.OSshell.stdout())
-            print('%d children have completed...' % numberComplete)
+            print('%d children have completed...' % numberComplete),
             if numberComplete == self._numberOfChildren:
                 break
             time.sleep(1)
+	    for backspace in range(1, 27): print('\b'),
 
 def synopsis(ab_shortOnly = False):
     scriptName = os.path.basename(sys.argv[0])
