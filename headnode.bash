@@ -30,6 +30,8 @@ G_SYNOPSIS="
 
 printf "Starting computenode job...\n"
 
+export PYTHONPATH=~/chris/lib/py
+
 ./_common/crun.py           \
     -u rudolph              \
     --host eofe4.mit.edu    \
