@@ -36,22 +36,6 @@ class childScheduler:
     # across all instances of this class
     #
     _dictErr = {
-        'subjectSpecFail'   : {
-            'action'        : 'examining command line arguments, ',
-            'error'         : 'it seems that no subjects were specified.',
-            'exitCode'      : 10},
-        'noFreeSurferEnv'   : {
-            'action'        : 'examining environment, ',
-            'error'         : 'it seems that the FreeSurfer environment has not been sourced.',
-            'exitCode'      : 11},
-        'noStagePostConditions' : {
-            'action'        : 'querying a stage for its exitCode, ',
-            'error'         : 'it seems that the stage has not been specified.',
-            'exitCode'      : 12},
-        'subjectDirnotExist': {
-            'action'        : 'examining the <subjectDirectories>, ',
-            'error'         : 'the directory does not exist.',
-            'exitCode'      : 13},
         'Load'              : {
             'action'        : 'attempting to pickle load object, ',
             'error'         : 'a PickleError occured.',
@@ -79,6 +63,11 @@ class childScheduler:
         self._sleepMaxLength            = 0
         self._numberOfChildren          = 1
 
+        self._str_remotePath            = '~/chris/src/cruntesting'
+        self._str_remoteHost            = 'mit.eofe4.edu'
+        self._str_remoteUser            = 'rudolph'
+        self._str_remoteCrun            = 'crun_hpc_slurm'
+
         # A local "shell"
         self.OSshell = crun.crun()
         self.OSshell.echo(False)
@@ -87,6 +76,10 @@ class childScheduler:
         self.OSshell.waitForChild(True)
 
         # The remote/scheduler shell
+        self.sshCluster = crun.crun_hpc_slurm(
+                                    remoteUser=self._str_remoteUser,
+                                    remoteHost=self._str_remoteHost
+                                    )
 
         for key, value in kwargs.iteritems():
             if key == 'cmd':            self._l_cmd             = value
@@ -129,6 +122,7 @@ class childScheduler:
                                     )
             str_wholeCmd = '%s%s' % (self._l_cmd[0], str_cmdEnd)
             print('Child %d will execute: <%s>' % (c, str_wholeCmd))
+            self.sshCluster(str_wholeCmd)
 
 
         # Now wait for all children to complete
