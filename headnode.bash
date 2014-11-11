@@ -28,7 +28,7 @@ G_SYNOPSIS="
 "
 
 
-printf "Starting computenode job...\n"
+printf "$(date) $(hostname) | Starting computenode job...\n"
 
 export PYTHONPATH=~/chris/lib/py
 
@@ -41,4 +41,4 @@ export PYTHONPATH=~/chris/lib/py
     "bash -c 'computenode.py'"
 
 
-printf "Completed computenode job.\n"
+printf "$(date) $(hostname) | Completed computenode job.\n"
