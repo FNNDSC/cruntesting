@@ -145,8 +145,8 @@ class childScheduler:
             time.sleep(1)
 	print('\n')
 	print('Cleaning up...')
-	self.OSshell('rm -f %s/*done*' % self._str_remoteDir)
-	self.OSshell('rm -f %s/job-*crun' % self._str_remoteDir)
+	self.OSshell('rm -f %s/*done*' % self._str_remotePath)
+	self.OSshell('rm -f %s/job-*crun' % self._str_remotePath)
 	
 
 def synopsis(ab_shortOnly = False):
