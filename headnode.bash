@@ -8,11 +8,12 @@ G_SYNOPSIS="
 
   SYNOPSIS
 
-	headnode.bash 	-p <PYTHONPATH>
-			-r <scriptDir>
-			-s <script>
-			-c <children>
-			-m <sleepMaxLength>
+	headnode.bash 	-C <cruntype>			\\	
+			-p <PYTHONPATH>			\\
+			-r <scriptDir>			\\
+			-s <script>			\\
+			-c <children>			\\
+			-m <sleepMaxLength>		\\
 			\"command to execute\"
 			
   DESCRIPTION
@@ -45,6 +46,9 @@ G_SYNOPSIS="
 	-m <sleepMaxLength>
 	The random sleep length for each child.
 
+	-n 
+	If passed, do not pass computenode.py a cleanup signal.
+
 	\"command to execute\"
 	The command that the computenode will schedule.
 
@@ -59,15 +63,19 @@ G_SCRIPTDIR="~/chris/src/cruntesting"
 G_SCRIPT="computenode.py"
 G_CHILDREN=10
 G_MAXSLEEPLENGTH=20
+G_CRUNTYPE="crun_hpc_slurm"
+G_CLEANUPARGS="--cleanup"
 
-while getopts p:r:s:c:m:v: option ; do
+while getopts C:p:r:s:c:m:v:n option ; do
         case "$option"
-        in
+        in	
+		C) G_CRUNTYPE=$OPTARG		;;
                 p) G_PYTHONPATH=$OPTARG		;;
 		r) G_SCRIPTDIR=$OPTARG		;;
 		s) G_SCRIPT=$OPTARG		;;
 		c) G_CHILDREN=$OPTARG		;;
 		m) G_MAXSLEEPLENGTH=$OPTARG	;;
+		n) G_CLEANUPARGS="--no-cleanup"	;;
 		v) let Gi_verbose=$OPTARG       ;;
                 \?) echo "$G_SYNOPSIS" 
                     exit 0;;
@@ -79,17 +87,20 @@ CMD=$*
 
 printf "$(date) $(hostname) | Starting computenode job...\n"
 
-export PYTHONPATH=/home/rudolph/chris/lib/py
+export PYTHONPATH=$G_PYTHONPATH
+#export PYTHONPATH=/home/rudolph/chris/lib/py
+USER=$(whoami)
+HEADNODE=$(hostname -s)
 
 ./_common/crun.py           \
-    -u rudolph              \
-    --host eofe4    	    \
-    -s crun_hpc_slurm       \
+    -u $USER		    \
+    --host $HEADNODE	    \
+    -s $G_CRUNTYPE	    \
     --no-setDefaultFlags    \
     --echo --echoStdOut     \
     --block		    \
     "bash -c 'export PYTHONPATH=$PYTHONPATH; 
-	cd ~/chris/src/cruntesting ; ~/chris/src/cruntesting/computenode.py --children $G_CHILDREN --sleepMaxLength $G_MAXSLEEPLENGTH \"/bin/ls /tmp\"'"
+	cd $G_SCRIPTDIR; $G_SCRIPTDIR/$G_SCRIPT --crun $G_CRUNTYPE --children $G_CHILDREN --sleepMaxLength $G_MAXSLEEPLENGTH $G_CLEANUPARGS $CMD'"
 
 
 printf "$(date) $(hostname) | Completed computenode job.\n"
