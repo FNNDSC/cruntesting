@@ -67,6 +67,7 @@ class childScheduler:
         self._str_remoteHost            = 'eofe4'
         self._str_remoteUser            = 'rudolph'
         self._str_remoteCrun            = 'crun_hpc_slurm'
+	self._b_cleanup			= True
 
         # A local "shell"
         self.OSshell = crun.crun()
@@ -75,19 +76,17 @@ class childScheduler:
         self.OSshell.detach(False)
         self.OSshell.waitForChild(True)
 
-        # The remote/scheduler shell
-        self.sshCluster = crun.crun_hpc_slurm(
-                                    remoteUser=self._str_remoteUser,
-                                    remoteHost=self._str_remoteHost
-                                    )
-
         for key, value in kwargs.iteritems():
+            if key == 'crun':           self._str_remoteCrun	= value
             if key == 'cmd':            self._l_cmd             = value
             if key == 'children':       self._numberOfChildren  = int(value)
             if key == 'sleepMaxLength': self._sleepMaxLength    = int(value)
+            if key == 'b_cleanup': 	self._b_cleanup		= value
+
+        # The remote/scheduler shell
+        self.sshCluster = eval('crun.' + self._str_remoteCrun + '(remoteUser=self._str_remoteUser,remoteHost=self._str_remoteHost)')
 
         self.initialize()
-
 
     def initialize(self):
         '''
@@ -108,20 +107,20 @@ class childScheduler:
 
         str_endJobCodon = 'echo #child# > %s/#child#-done.txt' % self._str_remotePath
 
-        str_coreCmd     = self._l_cmd[0]
 	str_cwd		= os.getcwd()
 
         for c in range(0, self._numberOfChildren):
             print('Spawning child %d.' % c),
             str_cmdEnd = str_endJobCodon.replace('#child#', str(c))
+	    str_coreCmd	= " ".join(self._l_cmd)
             # If b_sleepCmd is True, override cmd to a random sleep
             if self._sleepMaxLength:
                 sleepLength = random.uniform(0, self._sleepMaxLength)
-                self._l_cmd[0] = '%s\n/bin/sleep %d\n' % (\
+                str_coreCmd = '%s\n/bin/sleep %d\n' % (\
                                     str_coreCmd,
                                     sleepLength
                                     )
-            str_wholeCmd = '#!/bin/bash\n\n\n%s%s' % (self._l_cmd[0], str_cmdEnd)
+            str_wholeCmd = '#!/bin/bash\n\n\n%s%s' % (str_coreCmd, str_cmdEnd)
 	    str_scriptName = "%s/job-%d.crun" % (self._str_remotePath, c)
 	    self.OSshell("echo \"%s\" > %s; chmod 755 %s" % (str_wholeCmd, str_scriptName, str_scriptName))
             print('Child %d will execute: <%s>' % (c, str_scriptName))
@@ -137,16 +136,17 @@ class childScheduler:
         while(True):
             self.OSshell('ls -1 %s/*done* | wc -l' % self._str_remotePath)
             numberComplete = int(self.OSshell.stdout())
-	    str_msg = "%s children have completed...    \r" % numberComplete
+	    str_msg = "\t%s children have completed...    \r" % numberComplete
             print(str_msg),
 	    sys.stdout.flush()
             if numberComplete == self._numberOfChildren:
                 break
             time.sleep(1)
 	print('\n')
-	print('Cleaning up...')
-	self.OSshell('rm -f %s/*done*' % self._str_remotePath)
-	self.OSshell('rm -f %s/job-*crun' % self._str_remotePath)
+	if self._b_cleanup:
+	    print('Cleaning up...')
+	    self.OSshell('rm -f %s/*done*' % self._str_remotePath)
+	    self.OSshell('rm -f %s/job-*crun' % self._str_remotePath)
 	
 
 def synopsis(ab_shortOnly = False):
@@ -157,7 +157,8 @@ def synopsis(ab_shortOnly = False):
             %s                                              \\
                             [--children <numberOfChildren>]         \\
                             [--sleepMaxLength <interval>]           \\
-                            --ctype <crun_hpc_type>                 \\
+                            [--crun <crun_hpc_type>]                \\
+			    [--cleanup | --no-cleanup]		    \\
                             "Command and args to execute"
 
 
@@ -184,6 +185,10 @@ def synopsis(ab_shortOnly = False):
        --sleepMaxLength <interval>
        If passed, then command string will be suffixed with a random sleep
        interval.
+
+       --cleanup | --no-cleanup
+       If specified, either remove all the temporary output and job scripts,
+       or leave them be.	
 
        "<Command and args to execute>"
        The command string to schedule.
@@ -226,17 +231,26 @@ if __name__ == "__main__":
                         action='store',
                         default='1',
                         help='number of child processes to schedule')
+    parser.add_argument('--crun', '-C',
+                        dest='crun',
+                        action='store',
+                        default='crun_hpc_slurm',
+                        help='crun object to schedule on cluster')
     parser.add_argument('--sleepMaxLength', '-s',
                         dest='sleepMaxLength',
                         action='store',
                         default='0',
                         help='suffix a random length sleep')
+    parser.add_argument("--cleanup", help="cleanup temp files", dest='cleanup', action='store_true', default=True)
+    parser.add_argument("--no-cleanup", help="don't cleanup temp files", dest='cleanup', action='store_false')
 
     args = parser.parse_args()
 
     child = childScheduler(
+			crun		= args.crun,
                         children        = args.numberOfChildren,
                         sleepMaxLength  = args.sleepMaxLength,
-                        cmd             = args.l_cmd
+                        cmd             = args.l_cmd,
+			b_cleanup	= args.cleanup
     )
     child.run()
