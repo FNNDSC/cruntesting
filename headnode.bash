@@ -89,7 +89,7 @@ export PYTHONPATH=/home/rudolph/chris/lib/py
     --echo --echoStdOut     \
     --block		    \
     "bash -c 'export PYTHONPATH=$PYTHONPATH; 
-	cd ~/chris/src/cruntesting ; ~/chris/src/cruntesting/computenode.py --children 10 --sleepMaxLength 20 \"/bin/ls /tmp\"'"
+	cd ~/chris/src/cruntesting ; ~/chris/src/cruntesting/computenode.py --children $G_CHILDREN --sleepMaxLength $G_MAXSLEEPLENGTH \"/bin/ls /tmp\"'"
 
 
 printf "$(date) $(hostname) | Completed computenode job.\n"
