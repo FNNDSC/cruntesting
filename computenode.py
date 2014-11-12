@@ -106,9 +106,10 @@ class childScheduler:
         The 'run' method actually does the work of this class.
         '''
 
-        str_endJobCodon = '; echo #child# > %s/#child#-done.txt' % self._str_remotePath
+        str_endJobCodon = 'echo #child# > %s/#child#-done.txt' % self._str_remotePath
 
         str_coreCmd     = self._l_cmd[0]
+	str_cwd		= os.getcwd()
 
         for c in range(0, self._numberOfChildren):
             print('Spawning child %d.' % c),
@@ -116,28 +117,37 @@ class childScheduler:
             # If b_sleepCmd is True, override cmd to a random sleep
             if self._sleepMaxLength:
                 sleepLength = random.uniform(0, self._sleepMaxLength)
-                self._l_cmd[0] = '%s ; /bin/sleep %d ' % (\
+                self._l_cmd[0] = '%s\n/bin/sleep %d\n' % (\
                                     str_coreCmd,
                                     sleepLength
                                     )
-            str_wholeCmd = '%s%s' % (self._l_cmd[0], str_cmdEnd)
-            print('Child %d will execute: <%s>' % (c, str_wholeCmd))
+            str_wholeCmd = '#!/bin/bash\n\n\n%s%s' % (self._l_cmd[0], str_cmdEnd)
+	    str_scriptName = "%s/job-%d.crun" % (self._str_remotePath, c)
+	    self.OSshell("echo \"%s\" > %s; chmod 755 %s" % (str_wholeCmd, str_scriptName, str_scriptName))
+            print('Child %d will execute: <%s>' % (c, str_scriptName))
 	    self.sshCluster.echo(True)
 	    self.sshCluster.echoStdOut(True)
-            self.sshCluster(str_wholeCmd)
+            #self.sshCluster(str_wholeCmd)
+            self.sshCluster("%s" % (str_scriptName))
 
 
         # Now wait for all children to complete
         self.OSshell.echoStdOut(False)
         print('\n\n')
         while(True):
-            self.OSshell('ls -1 *done* | wc -l')
+            self.OSshell('ls -1 %s/*done* | wc -l' % self._str_remotePath)
             numberComplete = int(self.OSshell.stdout())
-            print('%d children have completed...' % numberComplete),
+	    str_msg = "%s children have completed...    \r" % numberComplete
+            print(str_msg),
+	    sys.stdout.flush()
             if numberComplete == self._numberOfChildren:
                 break
             time.sleep(1)
-	    for backspace in range(1, 27): print('\b'),
+	print('\n')
+	print('Cleaning up...')
+	self.OSshell('rm -f %s/*done*' % self._str_remoteDir)
+	self.OSshell('rm -f %s/job-*crun' % self._str_remoteDir)
+	
 
 def synopsis(ab_shortOnly = False):
     scriptName = os.path.basename(sys.argv[0])
