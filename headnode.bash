@@ -99,8 +99,8 @@ HEADNODE=$(hostname -s)
     --no-setDefaultFlags    \
     --echo --echoStdOut     \
     --block		    \
-    "bash -c 'export PYTHONPATH=$PYTHONPATH; 
-	cd $G_SCRIPTDIR; $G_SCRIPTDIR/$G_SCRIPT --crun $G_CRUNTYPE --children $G_CHILDREN --sleepMaxLength $G_MAXSLEEPLENGTH $G_CLEANUPARGS $CMD'"
+    "/bin/bash -c 'export PYTHONPATH=$PYTHONPATH; export PATH=/export/home/rpienaar/arch/Linux64/bin:$PATH ; 
+	cd $G_SCRIPTDIR; $G_SCRIPTDIR/$G_SCRIPT --crun $G_CRUNTYPE --out jobout --err joberr --children $G_CHILDREN --sleepMaxLength $G_MAXSLEEPLENGTH $G_CLEANUPARGS $CMD'"
 
 
 printf "$(date) $(hostname) | Completed computenode job.\n"

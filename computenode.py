@@ -64,9 +64,9 @@ class childScheduler:
         self._numberOfChildren          = 1
 
         self._str_remotePath            = '~/chris/src/cruntesting'
-        self._str_remoteHost            = 'eofe4'
-        self._str_remoteUser            = 'rudolph'
         self._str_remoteCrun            = 'crun_hpc_slurm'
+	self._str_remoteJobOut		= 'jobout'
+	self._str_remoteJobErr		= 'joberr'
 	self._b_cleanup			= True
 
         # A local "shell"
@@ -76,15 +76,26 @@ class childScheduler:
         self.OSshell.detach(False)
         self.OSshell.waitForChild(True)
 
+	self.OSshell('whoami')
+	self._str_remoteUser	= self.OSshell.stdout()
+	self.OSshell('hostname -s')
+	self._str_remoteHost	= self.OSshell.stdout()
+
         for key, value in kwargs.iteritems():
             if key == 'crun':           self._str_remoteCrun	= value
+	    if key == 'headnode':	self._str_remoteHost	= value
+	    if key == 'user':		self._str_remoteUser	= value
+            if key == 'cmd':            self._l_cmd             = value
+            if key == 'jobout':         self._str_remoteJobOut	= value
+            if key == 'joberr':         self._str_remoteJobErr	= value
             if key == 'cmd':            self._l_cmd             = value
             if key == 'children':       self._numberOfChildren  = int(value)
             if key == 'sleepMaxLength': self._sleepMaxLength    = int(value)
             if key == 'b_cleanup': 	self._b_cleanup		= value
 
         # The remote/scheduler shell
-        self.sshCluster = eval('crun.' + self._str_remoteCrun + '(remoteUser=self._str_remoteUser,remoteHost=self._str_remoteHost)')
+        print('crun.' + self._str_remoteCrun + '(remoteUser=self._str_remoteUser,remoteHost=self._str_remoteHost,remoteStdOut=self._str_remoteJobOut,remoteStdErr=self._str_remoteJobErr)')
+        self.sshCluster = eval('crun.' + self._str_remoteCrun + '(remoteUser=self._str_remoteUser,remoteHost=self._str_remoteHost,remoteStdOut=self._str_remoteJobOut,remoteStdErr=self._str_remoteJobErr)')
 
         self.initialize()
 
@@ -236,6 +247,26 @@ if __name__ == "__main__":
                         action='store',
                         default='crun_hpc_slurm',
                         help='crun object to schedule on cluster')
+    parser.add_argument('--headnode', '-H',
+                        dest='headnode',
+                        action='store',
+                        default='',
+                        help='name of the headnode')
+    parser.add_argument('--err', '-e',
+                        dest='err',
+                        action='store',
+                        default='',
+                        help='job stderr')
+    parser.add_argument('--out', '-o',
+                        dest='out',
+                        action='store',
+                        default='',
+                        help='job stdout')
+    parser.add_argument('--user', '-u',
+                        dest='user',
+                        action='store',
+                        default='',
+                        help='username on the headnode')
     parser.add_argument('--sleepMaxLength', '-s',
                         dest='sleepMaxLength',
                         action='store',
@@ -248,6 +279,10 @@ if __name__ == "__main__":
 
     child = childScheduler(
 			crun		= args.crun,
+			jobOut		= args.out,
+			jobErr		= args.err,			
+			headnode	= args.headnode,
+			user		= args.user,
                         children        = args.numberOfChildren,
                         sleepMaxLength  = args.sleepMaxLength,
                         cmd             = args.l_cmd,
