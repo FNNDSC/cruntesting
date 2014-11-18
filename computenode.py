@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python 
 #
 # NAME
 #
@@ -14,6 +14,7 @@
 #   o Initial design and coding.
 #
 
+
 # System imports
 import  os
 import  sys
@@ -23,6 +24,7 @@ import  time
 import  random
 from    _common import systemMisc       as misc
 from    _common import crun
+
 
 class childScheduler:
     '''
@@ -68,6 +70,8 @@ class childScheduler:
 	self._str_remoteJobOut		= 'jobout'
 	self._str_remoteJobErr		= 'joberr'
 	self._b_cleanup			= True
+	self._b_internalWait		= True
+	self._pythonpath		= ''
 
         # A local "shell"
         self.OSshell = crun.crun()
@@ -82,19 +86,26 @@ class childScheduler:
 	self._str_remoteHost	= self.OSshell.stdout()
 
         for key, value in kwargs.iteritems():
-            if key == 'crun':           self._str_remoteCrun	= value
-	    if key == 'headnode':	self._str_remoteHost	= value
-	    if key == 'user':		self._str_remoteUser	= value
-            if key == 'cmd':            self._l_cmd             = value
-            if key == 'jobout':         self._str_remoteJobOut	= value
-            if key == 'joberr':         self._str_remoteJobErr	= value
-            if key == 'cmd':            self._l_cmd             = value
-            if key == 'children':       self._numberOfChildren  = int(value)
-            if key == 'sleepMaxLength': self._sleepMaxLength    = int(value)
-            if key == 'b_cleanup': 	self._b_cleanup		= value
+            if key == 'crun':           	self._str_remoteCrun		= value
+	    if key == 'headnode':		self._str_remoteHost		= value
+	    if key == 'user':			self._str_remoteUser		= value
+	    if key == 'cnodescratchpath':	self._str_cnodescratchpath	= value
+            if key == 'jobOut':         	self._str_remoteJobOut		= value
+            if key == 'jobErr':         	self._str_remoteJobErr		= value
+            if key == 'cmd':            	self._l_cmd             	= value
+            if key == 'children':       	self._numberOfChildren  	= int(value)
+            if key == 'sleepMaxLength': 	self._sleepMaxLength    	= int(value)
+            if key == 'b_cleanup': 		self._b_cleanup			= value
+            if key == 'pythonpath': 		sys.path.append(value)
+	    if key == 'b_internalWait':		self._b_internalWait		= int(value)	
 
         # The remote/scheduler shell
+	print('remoteUser 	= %s' % self._str_remoteUser)
+	print('remoteHost 	= %s' % self._str_remoteHost)
+	print('remoteJobOut	= %s' % self._str_remoteJobOut)
+	print('remoteJobErr	= %s' % self._str_remoteJobErr)
         print('crun.' + self._str_remoteCrun + '(remoteUser=self._str_remoteUser,remoteHost=self._str_remoteHost,remoteStdOut=self._str_remoteJobOut,remoteStdErr=self._str_remoteJobErr)')
+	print("in computenode.py stdout = %s stderr =%s" % (self._str_remoteJobOut, self._str_remoteJobErr))
         self.sshCluster = eval('crun.' + self._str_remoteCrun + '(remoteUser=self._str_remoteUser,remoteHost=self._str_remoteHost,remoteStdOut=self._str_remoteJobOut,remoteStdErr=self._str_remoteJobErr)')
 
         self.initialize()
@@ -116,7 +127,7 @@ class childScheduler:
         The 'run' method actually does the work of this class.
         '''
 
-        str_endJobCodon = 'echo #child# > %s/#child#-done.txt' % self._str_remotePath
+        str_endJobCodon = 'echo #child# > %s/#child#-done.txt' % self._str_cnodescratchpath
 
 	str_cwd		= os.getcwd()
 
@@ -132,7 +143,7 @@ class childScheduler:
                                     sleepLength
                                     )
             str_wholeCmd = '#!/bin/bash\n\n\n%s%s' % (str_coreCmd, str_cmdEnd)
-	    str_scriptName = "%s/job-%d.crun" % (self._str_remotePath, c)
+	    str_scriptName = "%s/job-%d.crun" % (self._str_cnodescratchpath, c)
 	    self.OSshell("echo \"%s\" > %s; chmod 755 %s" % (str_wholeCmd, str_scriptName, str_scriptName))
             print('Child %d will execute: <%s>' % (c, str_scriptName))
 	    self.sshCluster.echo(True)
@@ -144,20 +155,23 @@ class childScheduler:
         # Now wait for all children to complete
         self.OSshell.echoStdOut(False)
         print('\n\n')
-        while(True):
-            self.OSshell('ls -1 %s/*done* | wc -l' % self._str_remotePath)
-            numberComplete = int(self.OSshell.stdout())
-	    str_msg = "\t%s children have completed...    \r" % numberComplete
-            print(str_msg),
-	    sys.stdout.flush()
-            if numberComplete == self._numberOfChildren:
-                break
-            time.sleep(1)
+	if self._b_internalWait:
+	    self.sshCluster.blockOnChild()
+	else:
+            while(True):
+            	self.OSshell('ls -1 %s/*done* | wc -l' % self._str_cnodescratchpath)
+            	numberComplete = int(self.OSshell.stdout())
+	    	str_msg = "\t%s children have completed...    \r" % numberComplete
+            	print(str_msg),
+	    	sys.stdout.flush()
+            	if numberComplete == self._numberOfChildren:
+                	break
+            	time.sleep(1)
 	print('\n')
 	if self._b_cleanup:
 	    print('Cleaning up...')
-	    self.OSshell('rm -f %s/*done*' % self._str_remotePath)
-	    self.OSshell('rm -f %s/job-*crun' % self._str_remotePath)
+	    self.OSshell('rm -f %s/*done*' % self._str_cnodescratchpath)
+	    self.OSshell('rm -f %s/job-*crun' % self._str_cnodescratchpath)
 	
 
 def synopsis(ab_shortOnly = False):
@@ -272,9 +286,20 @@ if __name__ == "__main__":
                         action='store',
                         default='0',
                         help='suffix a random length sleep')
+    parser.add_argument('--cnodescratchpath', '-S',
+                        dest='cnodescratchpath',
+                        action='store',
+                        default='',
+                        help='a path that is accessible to the cnode process')
+    parser.add_argument('--pythonpath', '-p',
+                        dest='pythonpath',
+                        action='store',
+                        default='',
+                        help='explicitly append to the python path for this script')
     parser.add_argument("--cleanup", help="cleanup temp files", dest='cleanup', action='store_true', default=True)
     parser.add_argument("--no-cleanup", help="don't cleanup temp files", dest='cleanup', action='store_false')
-
+    parser.add_argument("--internalWait", help="wait using scheduler poll", dest='internalWait', action='store_true', default=True)
+    parser.add_argument("--no-internalWait", help="wait by checking FS artifacts", dest='internalWait', action='store_false')
     args = parser.parse_args()
 
     child = childScheduler(
@@ -286,6 +311,9 @@ if __name__ == "__main__":
                         children        = args.numberOfChildren,
                         sleepMaxLength  = args.sleepMaxLength,
                         cmd             = args.l_cmd,
-			b_cleanup	= args.cleanup
+			cnodescratchpath= args.cnodescratchpath,
+			pythonpath	= args.pythonpath,
+			b_cleanup	= args.cleanup,
+			b_internalWait	= args.internalWait
     )
     child.run()
