@@ -115,7 +115,7 @@ fi
     --out $G_CNODESCRATCHPATH/$$.headnode.jobout \
     --err $G_CNODESCRATCHPATH/$$.headnode.joberr \
     -c "/bin/bash -c 'export PYTHONPATH=$PYTHONPATH; export PYTHONWARNINGS=ignore; export PATH=/export/home/rpienaar/arch/Linux64/bin:$PATH ; 
-	cd $G_SCRIPTDIR; $G_SCRIPTDIR/$G_SCRIPT --user $USER --headnode $HEADNODE --cnodescratchpath $G_CNODESCRATCHPATH --crun $G_CRUNTYPE --out $G_CNODESCRATCHPATH/$$.computenode.jobout --err $G_CNODESCRATCHPATH/$$.computenode.joberr --children $G_CHILDREN --sleepMaxLength $G_MAXSLEEPLENGTH $G_CLEANUPARGSi $G_INTERNALWAIT $CMD 2>/dev/null'"
+	cd $G_SCRIPTDIR; $G_SCRIPTDIR/$G_SCRIPT --user $USER --headnode $HEADNODE --cnodescratchpath $G_CNODESCRATCHPATH --crun $G_CRUNTYPE --out $G_CNODESCRATCHPATH/$$.computenode.jobout --err $G_CNODESCRATCHPATH/$$.computenode.joberr --children $G_CHILDREN --sleepMaxLength $G_MAXSLEEPLENGTH $G_CLEANUPARGS $G_INTERNALWAIT $CMD 2>/dev/null'"
 
 
 printf "$(date) $(hostname) | Completed computenode job.\n"
