@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 #
 # NAME
 #
@@ -97,7 +97,7 @@ class childScheduler:
             if key == 'sleepMaxLength': 	self._sleepMaxLength    	= int(value)
             if key == 'b_cleanup': 		self._b_cleanup			= value
             if key == 'pythonpath': 		sys.path.append(value)
-	    if key == 'b_internalWait':		self._b_internalWait		= int(value)	
+	    if key == 'b_internalWait':		self._b_internalWait		= int(value)
 
         # The remote/scheduler shell
 	print('remoteUser 	= %s' % self._str_remoteUser)
@@ -172,7 +172,7 @@ class childScheduler:
 	    print('Cleaning up...')
 	    self.OSshell('rm -f %s/*done*' % self._str_cnodescratchpath)
 	    self.OSshell('rm -f %s/job-*crun' % self._str_cnodescratchpath)
-	
+
 
 def synopsis(ab_shortOnly = False):
     scriptName = os.path.basename(sys.argv[0])
@@ -183,7 +183,14 @@ def synopsis(ab_shortOnly = False):
                             [--children <numberOfChildren>]         \\
                             [--sleepMaxLength <interval>]           \\
                             [--crun <crun_hpc_type>]                \\
+                            [--headnode <headnode>]                 \\
+                            [--user <user>]                         \\
+                            [--cnodescratchpath <dir>]              \\
+                            [--out <clusterOutFile>]                \\
+                            [--err <clusterErrFile>]                \\
 			    [--cleanup | --no-cleanup]		    \\
+                            [--internalWait | --no-internalWait]    \\
+                            [--pythonpath <dir>]                    \\
                             "Command and args to execute"
 
 
@@ -211,9 +218,40 @@ def synopsis(ab_shortOnly = False):
        If passed, then command string will be suffixed with a random sleep
        interval.
 
+       --headnode <headnode>
+       The name of the cluster headnode, from the perspective of the computenode.
+       Note that in some cases the external public name of the headnode is NOT the
+       same as the internal name.
+
+       --user <user>
+       The username on the headnode. Most likely this will be the same username
+       as that which is associated with the computenode script.
+
+       --cnodescratchpath <dir>
+       The directory from the perspective of the computenode to use as scratch space. In
+       some cases the computenodes do NOT have access to the normal user space, but
+       have their own space.
+
+       --out <clusterOutFile>
+       The name of the output file to contain stdout data from the scheduled job (if
+       applicable for the given cluster type).
+
+       --err <clusterErrFile>
+       The name of the output file to contain stderr data from the scheduled job (if
+       applicable for the given cluster type).
+
        --cleanup | --no-cleanup
        If specified, either remove all the temporary output and job scripts,
-       or leave them be.	
+       or leave them be.
+
+       --internalWait | --no-internalWait
+       If --internalWait, the crun object will block and wait for all scheduled children
+       to finish based on query/poll of the scheduler table. If --no-internalWait, the
+       script will parse files in the <cnodescratchpath> directory to determine if all
+       children are complete. This approach is the legacy approach and not recommended.
+
+       --pythonpath <dir>
+       Explicitly add <dir> to the pythonpath.
 
        "<Command and args to execute>"
        The command string to schedule.
@@ -305,7 +343,7 @@ if __name__ == "__main__":
     child = childScheduler(
 			crun		= args.crun,
 			jobOut		= args.out,
-			jobErr		= args.err,			
+			jobErr		= args.err,
 			headnode	= args.headnode,
 			user		= args.user,
                         children        = args.numberOfChildren,
