@@ -67,8 +67,8 @@ class childScheduler:
 
         self._str_remotePath            = '~/chris/src/cruntesting'
         self._str_remoteCrun            = 'crun_hpc_slurm'
-	self._str_remoteJobOut		= 'jobout'
-	self._str_remoteJobErr		= 'joberr'
+	self._str_schedulerStdOutDir	= 'jobOutDir'
+	self._str_schedulerStdErrDir	= 'jobErrDir'
 	self._b_cleanup			= True
 	self._b_internalWait		= True
 	self._pythonpath		= ''
@@ -90,8 +90,8 @@ class childScheduler:
 	    if key == 'headnode':		self._str_remoteHost		= value
 	    if key == 'user':			self._str_remoteUser		= value
 	    if key == 'cnodescratchpath':	self._str_cnodescratchpath	= value
-            if key == 'jobOut':         	self._str_remoteJobOut		= value
-            if key == 'jobErr':         	self._str_remoteJobErr		= value
+            if key == 'jobOutDir':         	self._str_schedulerStdOutDir	= value
+            if key == 'jobErrDir':         	self._str_schedulerStdErrDir	= value
             if key == 'cmd':            	self._l_cmd             	= value
             if key == 'children':       	self._numberOfChildren  	= int(value)
             if key == 'sleepMaxLength': 	self._sleepMaxLength    	= int(value)
@@ -100,13 +100,13 @@ class childScheduler:
 	    if key == 'b_internalWait':		self._b_internalWait		= int(value)
 
         # The remote/scheduler shell
-	print('remoteUser 	= %s' % self._str_remoteUser)
-	print('remoteHost 	= %s' % self._str_remoteHost)
-	print('remoteJobOut	= %s' % self._str_remoteJobOut)
-	print('remoteJobErr	= %s' % self._str_remoteJobErr)
-        print('crun.' + self._str_remoteCrun + '(remoteUser=self._str_remoteUser,remoteHost=self._str_remoteHost,remoteStdOut=self._str_remoteJobOut,remoteStdErr=self._str_remoteJobErr)')
-	print("in computenode.py stdout = %s stderr =%s" % (self._str_remoteJobOut, self._str_remoteJobErr))
-        self.sshCluster = eval('crun.' + self._str_remoteCrun + '(remoteUser=self._str_remoteUser,remoteHost=self._str_remoteHost,remoteStdOut=self._str_remoteJobOut,remoteStdErr=self._str_remoteJobErr)')
+	print('remoteUser 	        = %s' % self._str_remoteUser)
+	print('remoteHost 	        = %s' % self._str_remoteHost)
+	print('schedulerStdOutDir	= %s' % self._str_schedulerStdOutDir)
+	print('schedulerStdErrDir	= %s' % self._str_schedulerStdErrDir)
+        print('crun.' + self._str_remoteCrun + '(remoteUser=self._str_remoteUser,remoteHost=self._str_remoteHost,schedulerStdOutDir=self._str_schedulerStdOutDir,schedulerStdErrDir=self._str_schedulerStdErrDir)')
+	print("in computenode.py stdoutDir = %s stderrDir =%s" % (self._str_schedulerStdOutDir, self._str_schedulerStdErrDir))
+        self.sshCluster = eval('crun.' + self._str_remoteCrun + '(remoteUser=self._str_remoteUser,remoteHost=self._str_remoteHost,schedulerStdOutDir=self._str_schedulerStdOutDir,schedulerStdErrDir=self._str_schedulerStdErrDir)')
 
         self.initialize()
 
@@ -149,6 +149,8 @@ class childScheduler:
 	    self.sshCluster.echo(True)
 	    self.sshCluster.echoStdOut(True)
             #self.sshCluster(str_wholeCmd)
+            self.sshCluster.schedulerStdOutDir(self._str_schedulerStdOutDir)
+            self.sshCluster.schedulerStdErrDir(self._str_schedulerStdErrDir)
             self.sshCluster("%s" % (str_scriptName))
 
 
@@ -342,8 +344,8 @@ if __name__ == "__main__":
 
     child = childScheduler(
 			crun		= args.crun,
-			jobOut		= args.out,
-			jobErr		= args.err,
+			jobOutDir       = args.out,
+			jobErrDir	= args.err,
 			headnode	= args.headnode,
 			user		= args.user,
                         children        = args.numberOfChildren,
