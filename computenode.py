@@ -148,7 +148,7 @@ class childScheduler:
             print('Child %d will execute: <%s>' % (c, str_scriptName))
 	    self.sshCluster.echo(True)
 	    self.sshCluster.echoStdOut(True)
-            #self.sshCluster(str_wholeCmd)
+            self.sshCluster.waitForChild(True)
             self.sshCluster.schedulerStdOutDir(self._str_schedulerStdOutDir)
             self.sshCluster.schedulerStdErrDir(self._str_schedulerStdErrDir)
             self.sshCluster("%s" % (str_scriptName))
