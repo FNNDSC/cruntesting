@@ -1,0 +1,2 @@
+ ./headnode.bash -C crun_hpc_mosix -p ~/chris/lib/py -r ~/chris/src/cruntesting -s computenode.py -c 20 -m 10 -t ~/scratch -w ls /tmp 2>/dev/null
+
