@@ -8,14 +8,15 @@ G_SYNOPSIS="
 
   SYNOPSIS
 
-	headnode.bash 	-C <cruntype>			\\	
+	headnode.bash 	-C <cruntype>			\\
 			-p <PYTHONPATH>			\\
 			-r <scriptDir>			\\
 			-s <script>			\\
+                        -t <computeNodeScratch>         \\
 			-c <children>			\\
 			-m <sleepMaxLength>		\\
 			\"command to execute\"
-			
+
   DESCRIPTION
 
         'headnode.bash' emulates the ChRIS runtime/scheduling framework
@@ -40,13 +41,16 @@ G_SYNOPSIS="
 	-s <script>
 	The actual script to run on the compute node.
 
+        -t <computeNodeScratch.
+        The scratch space accessible/visible to the compute node.
+
 	-c <children>
 	The number of children that the compute node will attempt to schedule.
 
 	-m <sleepMaxLength>
 	The random sleep length for each child.
 
-	-n 
+	-n
 	If passed, do not pass computenode.py a cleanup signal.
 
 	-w
@@ -72,9 +76,9 @@ G_CLEANUPARGS="--cleanup"
 G_INTERNALWAIT="--internalWait"
 G_CNODESCRATCHPATH="~/scratch"
 
-while getopts C:p:r:s:c:m:v:nt:w: option ; do
+while getopts C:p:r:s:c:m:v:nt:w option ; do
         case "$option"
-        in	
+        in
 		C) G_CRUNTYPE=$OPTARG			;;
                 p) G_PYTHONPATH=$OPTARG			;;
 		r) G_SCRIPTDIR=$OPTARG			;;
@@ -85,7 +89,7 @@ while getopts C:p:r:s:c:m:v:nt:w: option ; do
 		w) G_INTERNALWAIT="--no-internalWait"	;;
 		t) G_CNODESCRATCHPATH=$OPTARG		;;
 		v) let Gi_verbose=$OPTARG       	;;
-                \?) echo "$G_SYNOPSIS" 
+                \?) echo "$G_SYNOPSIS"
                     exit 0;;
         esac
 done
@@ -107,15 +111,19 @@ else
 	printf "$(date) $(hostname) | child will monitor subjobs by checking filesystem...\n"
 fi
 
-./_common/crun.py           \
+#echo "$CMD"
+
+RUN="./_common/crun.py           \
     -u $USER		    \
     --host $HEADNODE	    \
     -s $G_CRUNTYPE	    \
     --blockOnChild	    \
     --out $G_CNODESCRATCHPATH/$$.headnode.jobout \
     --err $G_CNODESCRATCHPATH/$$.headnode.joberr \
-    -c "/bin/bash -c 'export PYTHONPATH=$PYTHONPATH; export PYTHONWARNINGS=ignore; export PATH=/export/home/rpienaar/arch/Linux64/bin:$PATH ; 
-	cd $G_SCRIPTDIR; $G_SCRIPTDIR/$G_SCRIPT --user $USER --headnode $HEADNODE --cnodescratchpath $G_CNODESCRATCHPATH --crun $G_CRUNTYPE --out $G_CNODESCRATCHPATH/$$.computenode.jobout --err $G_CNODESCRATCHPATH/$$.computenode.joberr --children $G_CHILDREN --sleepMaxLength $G_MAXSLEEPLENGTH $G_CLEANUPARGS $G_INTERNALWAIT $CMD 2>/dev/null'"
+    -c \"/bin/bash -c 'export PYTHONPATH=$PYTHONPATH; export PYTHONWARNINGS=ignore; export PATH=/export/home/rpienaar/arch/Linux64/bin:$PATH ;
+	cd $G_SCRIPTDIR; $G_SCRIPTDIR/$G_SCRIPT --user $USER --headnode $HEADNODE --cnodescratchpath $G_CNODESCRATCHPATH --crun $G_CRUNTYPE --out $G_CNODESCRATCHPATH/$$.computenode.jobout --err $G_CNODESCRATCHPATH/$$.computenode.joberr --children $G_CHILDREN --sleepMaxLength $G_MAXSLEEPLENGTH $G_CLEANUPARGS $G_INTERNALWAIT $CMD 2>/dev/null'\""
 
+#echo "$RUN"
+eval "$RUN"
 
 printf "$(date) $(hostname) | Completed computenode job.\n"
