@@ -331,6 +331,7 @@ class crun(object):
         ret                     = 0
 
         if self._b_echoCmd: sys.stdout.write('%s\n' % self._str_shellCmd)
+        print(self._str_shellCmd)
         if self._b_runCmd:
             kwargs['waitForChild'] = self._b_waitForChild
             self._str_stdout, self._str_stderr, self._exitCode    = \
