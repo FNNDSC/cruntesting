@@ -331,7 +331,6 @@ class crun(object):
         ret                     = 0
 
         if self._b_echoCmd: sys.stdout.write('%s\n' % self._str_shellCmd)
-        print(self._str_shellCmd)
         if self._b_runCmd:
             kwargs['waitForChild'] = self._b_waitForChild
             self._str_stdout, self._str_stderr, self._exitCode    = \
@@ -864,8 +863,6 @@ class crun_hpc_chpc(crun_hpc):
         #take stdout from out and process it to get the job id number
         self._str_jobID = out[0].strip().split().pop().split('.').pop(0)
         self._jobID_list.append(self._str_jobID)
-        print(str_cmd)
-        print(self._jobID_list)
         return out
 
     def jobID(self):
