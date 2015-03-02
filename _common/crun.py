@@ -861,6 +861,8 @@ class crun_hpc_chpc(crun_hpc):
         self._str_scheduleCmd       = self._str_scheduler
         out = crun.__call__(self, str_cmd, **kwargs)
         #take stdout from out and process it to get the job id number
+        print("out = ")
+        print(out)
         self._str_jobID = out[0].strip().split().pop().split('.').pop(0)
         self._jobID_list.append(self._str_jobID)
         return out
