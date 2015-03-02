@@ -863,6 +863,8 @@ class crun_hpc_chpc(crun_hpc):
         #take stdout from out and process it to get the job id number
         self._str_jobID = out[0].strip().split().pop().split('.').pop(0)
         self._jobID_list.append(self._str_jobID)
+        print(str_cmd)
+        print(self._jobID_list)
         return out
 
     def jobID(self):
