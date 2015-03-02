@@ -41,7 +41,7 @@ G_SYNOPSIS="
 	-s <script>
 	The actual script to run on the compute node.
 
-        -t <computeNodeScratch.
+        -t <computeNodeScratch>
         The scratch space accessible/visible to the compute node.
 
 	-c <children>

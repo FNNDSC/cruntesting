@@ -1,2 +1,13 @@
- ./headnode.bash -C crun_hpc_mosix -p ~/chris/lib/py -r ~/chris/src/cruntesting -s computenode.py -c 20 -m 10 -t ~/scratch -w ls /tmp 2>/dev/null
+#!/bin/bash
+
+echo $#
+
+if (( $# != 1 )) ; then
+    echo "USAGE: headnode.bash <crun_type>"
+    exit 1
+fi
+
+CRUNTYPE=$1
+
+./headnode.bash -C $CRUNTYPE -p ~/chris/lib/py -r ~/chris/src/cruntesting -s computenode.py -c 20 -m 10 -t ~/scratch -w ls /tmp 2>/dev/null
 
