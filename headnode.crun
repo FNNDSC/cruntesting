@@ -9,5 +9,5 @@ fi
 
 CRUNTYPE=$1
 
-./headnode.bash -C $CRUNTYPE -p /export/home/rpienaar/chris/lib/py -r /export/home/rpienaar/chris/src/cruntesting -s computenode.py -c 20 -m 10 -t /export/home/rpienaar/scratch ls /tmp 2>/dev/null
+./headnode.bash -C $CRUNTYPE -p ~/chris/lib/py -r ~/chris/src/cruntesting -s computenode.py -c 20 -m 10 -t ~/scratch ls /tmp 2>/dev/null
 
