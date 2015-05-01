@@ -67,6 +67,7 @@ class childScheduler:
 
         self._str_remotePath            = '~/chris/src/cruntesting'
         self._str_remoteCrun            = 'crun_hpc_slurm'
+        self._str_queue                 = ''
 	self._str_schedulerStdOutDir	= 'jobOutDir'
 	self._str_schedulerStdErrDir	= 'jobErrDir'
 	self._b_cleanup			= True
@@ -87,6 +88,7 @@ class childScheduler:
 
         for key, value in kwargs.iteritems():
             if key == 'crun':           	self._str_remoteCrun		= value
+            if key == 'queue':           	self._str_queue		        = value
 	    if key == 'headnode':		self._str_remoteHost		= value
 	    if key == 'user':			self._str_remoteUser		= value
 	    if key == 'cnodescratchpath':	self._str_cnodescratchpath	= value
@@ -107,6 +109,8 @@ class childScheduler:
         print('crun.' + self._str_remoteCrun + '(remoteUser=self._str_remoteUser,remoteHost=self._str_remoteHost,schedulerStdOutDir=self._str_schedulerStdOutDir,schedulerStdErrDir=self._str_schedulerStdErrDir)')
 	print("in computenode.py stdoutDir = %s stderrDir =%s" % (self._str_schedulerStdOutDir, self._str_schedulerStdErrDir))
         self.sshCluster = eval('crun.' + self._str_remoteCrun + '(remoteUser=self._str_remoteUser,remoteHost=self._str_remoteHost,schedulerStdOutDir=self._str_schedulerStdOutDir,schedulerStdErrDir=self._str_schedulerStdErrDir)')
+        if len(self._str_queue):
+            self.sshCluster.queueName(self._str_queue)
 
         self.initialize()
 
@@ -301,6 +305,11 @@ if __name__ == "__main__":
                         action='store',
                         default='crun_hpc_slurm',
                         help='crun object to schedule on cluster')
+    parser.add_argument("-q", "--queue",
+                        dest='queue',
+                        action='store',
+                        default='',
+                        help="queue to use")
     parser.add_argument('--headnode', '-H',
                         dest='headnode',
                         action='store',
@@ -344,6 +353,7 @@ if __name__ == "__main__":
 
     child = childScheduler(
 			crun		= args.crun,
+                        queue           = args.queue,
 			jobOutDir       = args.out,
 			jobErrDir	= args.err,
 			headnode	= args.headnode,
