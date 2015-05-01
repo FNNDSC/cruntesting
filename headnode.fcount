@@ -18,7 +18,7 @@ G_SYNOPSIS="
 	query the cluster scheduler, but will monitor files written
 	to the filesystem.
 
-	This is generally considered a "blunt force" approach to
+	This is generally considered a \"blunt force\" approach to
 	monitoring parallel job status.
 
  ARGUMENTS
