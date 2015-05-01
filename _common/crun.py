@@ -328,7 +328,6 @@ class crun(object):
 
         if self._b_disassociate:
             self._str_shellCmd  = "( %s ) &" % self._str_shellCmd
-        ret                     = 0
 
         if self._b_echoCmd: sys.stdout.write('%s\n' % self._str_shellCmd)
         if self._b_runCmd:
