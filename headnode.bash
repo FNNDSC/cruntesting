@@ -9,6 +9,7 @@ G_SYNOPSIS="
   SYNOPSIS
 
 	headnode.bash 	-C <cruntype>			\\
+			-q <queue>			\\
 			-p <PYTHONPATH>			\\
 			-r <scriptDir>			\\
 			-s <script>			\\
@@ -30,6 +31,12 @@ G_SYNOPSIS="
         are complete.
 
   ARGS
+
+	-C <cruntype>
+	The crun type to run.
+	
+	-q <queue>
+	If specified, the queue for the <cruntype> object to use.
 
 	-p <PYTHONPATH>
 	The PYTHONPATH in the compute node file system space.
@@ -72,14 +79,16 @@ G_SCRIPT="computenode.py"
 G_CHILDREN=10
 G_MAXSLEEPLENGTH=20
 G_CRUNTYPE="crun_hpc_slurm"
+G_CRUNQUEUE=""
 G_CLEANUPARGS="--cleanup"
 G_INTERNALWAIT="--internalWait"
 G_CNODESCRATCHPATH="~/scratch"
 
-while getopts C:p:r:s:c:m:v:nt:w option ; do
+while getopts C:q:p:r:s:c:m:v:nt:w option ; do
         case "$option"
         in
 		C) G_CRUNTYPE=$OPTARG			;;
+		q) G_CRUNQUEUE=$OPTARG			;;
                 p) G_PYTHONPATH=$OPTARG			;;
 		r) G_SCRIPTDIR=$OPTARG			;;
 		s) G_SCRIPT=$OPTARG			;;
@@ -98,7 +107,7 @@ shift $(($OPTIND - 1))
 CMD=$*
 
 printf "$(date) $(hostname) | Starting computenode job...\n"
-
+Nice..
 export PYTHONPATH=$G_PYTHONPATH
 #export PYTHONPATH=/home/rudolph/chris/lib/py
 USER=$(whoami)
@@ -113,17 +122,40 @@ fi
 
 #echo "$CMD"
 
-RUN="./_common/crun.py           \
-    -u $USER		    \
-    --host $HEADNODE	    \
-    -s $G_CRUNTYPE	    \
-    --blockOnChild	    \
-    --out $G_CNODESCRATCHPATH/$$.headnode.jobout \
-    --err $G_CNODESCRATCHPATH/$$.headnode.joberr \
-    -c \"/bin/bash -c 'export PYTHONPATH=$PYTHONPATH; export PYTHONWARNINGS=ignore; export PATH=/export/home/rpienaar/arch/Linux64/bin:$PATH ;
-	cd $G_SCRIPTDIR; $G_SCRIPTDIR/$G_SCRIPT --user $USER --headnode $HEADNODE --cnodescratchpath $G_CNODESCRATCHPATH --crun $G_CRUNTYPE --out $G_CNODESCRATCHPATH/$$.computenode.jobout --err $G_CNODESCRATCHPATH/$$.computenode.joberr --children $G_CHILDREN --sleepMaxLength $G_MAXSLEEPLENGTH $G_CLEANUPARGS $G_INTERNALWAIT $CMD 2>/dev/null'\""
+if (( ${#G_CRUNQUEUE} )) ; then
+	QUEUEARGS=" -q $G_CRUNQUEUE "
+else
+	QUEUEARGS=""
+fi
 
-#echo "$RUN"
+RUN="./_common/crun.py           			                \
+    --echo						                \
+    -u $USER		    				                \
+    --host $HEADNODE	    				                \
+    -s $G_CRUNTYPE	    				                \
+    $QUEUEARGS 						                \
+    --blockOnChild	    				                \
+    --out $G_CNODESCRATCHPATH/$$.headnode.jobout 	                \
+    --err $G_CNODESCRATCHPATH/$$.headnode.joberr 	                \
+    -c \"   export PYTHONPATH=$PYTHONPATH;                              \
+            export PYTHONWARNINGS=ignore;                               \
+            export PATH=/export/home/rpienaar/arch/Linux64/bin:$PATH ;  \
+            cd $G_SCRIPTDIR;                                            \
+            $G_SCRIPTDIR/$G_SCRIPT                                      \
+                --user $USER                                            \
+                --headnode $HEADNODE                                    \
+                --cnodescratchpath $G_CNODESCRATCHPATH                  \
+                --crun $G_CRUNTYPE                                      \
+                $QUEUEARGS                                              \
+                --out $G_CNODESCRATCHPATH/$$.computenode.jobout         \
+                --err $G_CNODESCRATCHPATH/$$.computenode.joberr         \
+                --children $G_CHILDREN                                  \
+                --sleepMaxLength $G_MAXSLEEPLENGTH                      \
+                $G_CLEANUPARGS $G_INTERNALWAIT                          \
+                $CMD\""
+#                $CMD 2>/dev/null\""
+RUN=$(echo "$RUN" | sed 's/  */ /g')
+echo "$RUN"
 eval "$RUN"
 
 printf "$(date) $(hostname) | Completed computenode job.\n"
