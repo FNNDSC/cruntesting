@@ -129,7 +129,7 @@ else
 fi
 
 RUN="./_common/crun.py           			                \
-    --echo						                \
+    --no-echo						                \
     -u $USER		    				                \
     --host $HEADNODE	    				                \
     -s $G_CRUNTYPE	    				                \
@@ -155,7 +155,7 @@ RUN="./_common/crun.py           			                \
                 $CMD\""
 #                $CMD 2>/dev/null\""
 RUN=$(echo "$RUN" | sed 's/  */ /g')
-echo "$RUN"
+#echo "$RUN"
 eval "$RUN"
 
 printf "$(date) $(hostname) | Completed computenode job.\n"
