@@ -1,13 +1,67 @@
 #!/bin/bash
 
-echo $#
+G_SYNOPSIS="
 
-if (( $# != 1 )) ; then
-    echo "USAGE: headnode.bash <crun_type>"
-    exit 1
-fi
+ NAME
 
+ 	headnode.fcount
+
+ SYNOPSIS
+
+ 	headnode.fcount [-q <queue>] [-c <children>] <crun_type>
+
+ DESCRIPTION
+
+ 	A simple helper script for calling 'headnode.bash' with
+	a set of test arguments. The 'fcount' part of the name
+	denotes that this script will spawn children that will not
+	query the cluster scheduler, but will monitor files written
+	to the filesystem.
+
+	This is generally considered a "blunt force" approach to
+	monitoring parallel job status.
+
+ ARGUMENTS
+
+ 	-q <queue>
+	Optional.
+	If specified, will pass the string <queue> to the <crun_type> object.
+
+	-c <children>
+	Optional.
+	The number of children to spawn.
+
+	<crun_type>
+	The crun object to instantiate.
+
+"
+
+G_CHILDREN=20
+
+while getopts q:c: option ; do
+        case "$option"
+        in
+                c) G_CHILDREN=$OPTARG                   ;;
+		q) G_CRUNQUEUE=$OPTARG			;;
+		v) let Gi_verbose=$OPTARG       	;;
+                \?) echo "$G_SYNOPSIS"
+                    exit 0;;
+        esac
+done
+
+shift $(($OPTIND - 1))
 CRUNTYPE=$1
 
-./headnode.bash -C $CRUNTYPE -p ~/chris/lib/py -r ~/chris/src/cruntesting -s computenode.py -c 20 -m 10 -t ~/scratch -w ls /tmp 2>/dev/null
+if (( ! ${#CRUNTYPE} )) ; then
+	echo "$G_SYNOPSIS"
+	exit 1
+fi
+
+if (( ${#G_CRUNQUEUE} )) ; then
+	QUEUEARGS="-q $G_CRUNQUEUE"
+else
+	QUEUEARGS=""
+fi
+
+./headnode.bash -C $CRUNTYPE $QUEUEARGS -p ~/chris/lib/py -r ~/chris/src/cruntesting -s computenode.py -c $G_CHILDREN -m 10 -t ~/scratch -w ls /tmp 2>/dev/null
 
