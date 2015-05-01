@@ -13,10 +13,15 @@ G_SYNOPSIS="
  DESCRIPTION
  
  	A simple helper script for calling 'headnode.bash' with
-	a set of test arguments.
+	a set of test arguments. The 'crun' part of the name
+	denotes that this script will spawn children that will
+	query the cluster scheduler using 'crun' machinery.
+
+	This is generally the preferred approach to
+	monitoring parallel job status.
 	
  ARGUMENTS
- 
+
  	-q <queue>
 	Optional.
 	If specified, will pass the string <queue> to the <crun_type> object.
